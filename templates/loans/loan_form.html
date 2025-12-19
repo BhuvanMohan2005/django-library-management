@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Loan - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'loan_list' %}">Loans</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Create New Loan</li>
+            </ol>
+        </nav>
+        <h1>Create New Book Loan</h1>
+        <p class="text-muted">Lend a book to a member</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.book.id_for_label }}" class="form-label">{{ form.book.label }}</label>
+                            {{ form.book }}
+                            <small class="text-muted">Only available books are shown</small>
+                            {% if form.book.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.book.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.member.id_for_label }}" class="form-label">{{ form.member.label }}</label>
+                            {{ form.member }}
+                            <small class="text-muted">Only active members who can borrow more books are shown</small>
+                            {% if form.member.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.member.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.due_date.id_for_label }}" class="form-label">{{ form.due_date.label }}</label>
+                        {{ form.due_date }}
+                        <small class="text-muted">Default due date is 14 days from today</small>
+                        {% if form.due_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.due_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'loan_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Loan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Available Books</h5>
+            </div>
+            <div class="card-body">
+                {% if available_books %}
+                <div class="list-group">
+                    {% for book in available_books|slice:":5" %}
+                    <div class="list-group-item">
+                        <strong>{{ book.title }}</strong><br>
+                        <small class="text-muted">{{ book.author }} • {{ book.available_copies }} available</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No books available for loan.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Active Members</h5>
+            </div>
+            <div class="card-body">
+                {% if active_members %}
+                <div class="list-group">
+                    {% for member in active_members|slice:":5" %}
+                    <div class="list-group-item">
+                        <strong>{{ member.full_name }}</strong><br>
+                        <small class="text-muted">{{ member.current_books_borrowed }}/{{ member.max_books_allowed }} books borrowed</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No active members available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    form input, form select, form textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    form label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875em;
+    }
+</style>
+{% endblock %}

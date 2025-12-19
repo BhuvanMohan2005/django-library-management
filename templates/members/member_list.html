@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Members - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-8">
+        <h1>Members</h1>
+        <p class="text-muted">Library members and their information</p>
+    </div>
+    <div class="col-4 text-end">
+        {% if user.is_authenticated %}
+        <a href="{% url 'member_create' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Add New Member
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Membership Type</th>
+                        <th>Books Borrowed</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>
+                            <strong>{{ member.full_name }}</strong><br>
+                            <small class="text-muted">Member since {{ member.membership_start_date|date:"M d, Y" }}</small>
+                        </td>
+                        <td>{{ member.email }}</td>
+                        <td>{{ member.phone|default:"--" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if member.membership_type == 'PRE' %}bg-warning
+                                {% elif member.membership_type == 'STU' %}bg-info
+                                {% elif member.membership_type == 'SEN' %}bg-secondary
+                                {% else %}bg-primary{% endif %}">
+                                {{ member.get_membership_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                {% widthratio member.current_books_borrowed member.max_books_allowed 100 as percentage %}
+                                <div class="progress-bar 
+                                    {% if member.current_books_borrowed == member.max_books_allowed %}bg-danger
+                                    {% elif member.current_books_borrowed > member.max_books_allowed %}bg-warning
+                                    {% elif percentage|add:"0" > 80 %}bg-warning
+                                    {% else %}bg-success{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ percentage }}%">
+                                    {{ member.current_books_borrowed }}/{{ member.max_books_allowed }}
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {% if member.current_books_borrowed == member.max_books_allowed %}
+                                    Limit reached
+                                {% elif member.current_books_borrowed == 0 %}
+                                    No books borrowed
+                                {% else %}
+                                    {{ member.max_books_allowed|add:"-"|add:member.current_books_borrowed }} books remaining
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if member.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'member_detail' member.pk %}" class="btn btn-outline-primary">View</a>
+                                {% if user.is_authenticated %}
+                                <a href="{% url 'member_update' member.pk %}" class="btn btn-outline-warning">Edit</a>
+                                <a href="{% url 'loan_create' %}" class="btn btn-outline-success">Loan Book</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="alert alert-info">
+                                No members found. {% if user.is_authenticated %}<a href="{% url 'member_create' %}">Add the first member</a>{% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Membership Type Legend -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Membership Types</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for code, name in membership_types %}
+            <div class="col-md-3 mb-2">
+                <span class="badge 
+                    {% if code == 'PRE' %}bg-warning
+                    {% elif code == 'STU' %}bg-info
+                    {% elif code == 'SEN' %}bg-secondary
+                    {% else %}bg-primary{% endif %} me-2">
+                    {{ name }}
+                </span>
+                <small class="text-muted">
+                    {% if code == 'REG' %}(5 books max)
+                    {% elif code == 'PRE' %}(15 books max)
+                    {% elif code == 'STU' %}(10 books max)
+                    {% elif code == 'SEN' %}(8 books max)
+                    {% endif %}
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add custom CSS for better progress bar visibility -->
+<style>
+    .progress-bar {
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: #000;
+    }
+    
+    .progress-bar.bg-danger {
+        color: white;
+    }
+    
+    .progress-bar.bg-warning {
+        color: #000;
+    }
+    
+    .progress-bar.bg-success {
+        color: #000;
+    }
+</style>
+{% endblock %}

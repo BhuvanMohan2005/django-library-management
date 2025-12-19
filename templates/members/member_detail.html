@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ member.full_name }} - Member Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'member_list' %}">Members</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ member.full_name }}</li>
+            </ol>
+        </nav>
+        <h1>{{ member.full_name }}</h1>
+        <p class="text-muted">Member Details</p>
+    </div>
+    <div class="col-4 text-end">
+        {% if user.is_authenticated %}
+        <div class="btn-group">
+            <a href="{% url 'member_update' member.pk %}" class="btn btn-warning">Edit Member</a>
+            <a href="{% url 'loan_create' %}" class="btn btn-success">Loan Book</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Member Information -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Member Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ member.full_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ member.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone</th>
+                        <td>{{ member.phone|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address</th>
+                        <td>{{ member.address|linebreaks|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Membership Type</th>
+                        <td>
+                            <span class="badge 
+                                {% if member.membership_type == 'PRE' %}bg-warning
+                                {% elif member.membership_type == 'STU' %}bg-info
+                                {% elif member.membership_type == 'SEN' %}bg-secondary
+                                {% else %}bg-primary{% endif %}">
+                                {{ member.get_membership_type_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Member Since</th>
+                        <td>{{ member.membership_start_date|date:"F d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            {% if member.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Borrowing Status -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Borrowing Status</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="stat-number">{{ member.current_books_borrowed }}/{{ member.max_books_allowed }}</div>
+                <div class="stat-label">Books Borrowed</div>
+                
+                <div class="progress mt-3" style="height: 25px;">
+                    {% widthratio member.current_books_borrowed member.max_books_allowed 100 as borrow_percent %}
+                    <div class="progress-bar 
+                        {% if member.current_books_borrowed == member.max_books_allowed %}bg-danger
+                        {% elif borrow_percent|add:"0" > 80 %}bg-warning
+                        {% else %}bg-success{% endif %}" 
+                        role="progressbar" 
+                        style="width: {{ borrow_percent }}%">
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    {% if member.can_borrow_more %}
+                        <span class="badge bg-success">Can borrow more books</span>
+                    {% else %}
+                        <span class="badge bg-danger">Borrowing limit reached</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-3">
+                    {% if user.is_authenticated %}
+                        {% if member.can_borrow_more %}
+                            <a href="{% url 'loan_create' %}" class="btn btn-success btn-sm">Loan Book to Member</a>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled>Cannot borrow more</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Loans -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📚 Currently Borrowed Books</h5>
+            </div>
+            <div class="card-body">
+                {% if current_loans %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Author</th>
+                                    <th>Loan Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in current_loans %}
+                                <tr {% if loan.status == 'OVE' %}class="table-warning"{% endif %}>
+                                    <td>
+                                        <a href="{% url 'book_detail' loan.book.pk %}">
+                                            {{ loan.book.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ loan.book.author }}</td>
+                                    <td>{{ loan.loan_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {{ loan.due_date|date:"M d, Y" }}
+                                        {% if loan.status == 'OVE' %}
+                                            <br><small class="text-danger">Overdue</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if loan.status == 'ACT' %}bg-primary{% elif loan.status == 'OVE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                            {{ loan.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.is_authenticated %}
+                                            {% if loan.status == 'ACT' or loan.status == 'OVE' %}
+                                            <a href="{% url 'loan_return' loan.pk %}" class="btn btn-success btn-sm">Return</a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="bi bi-info-circle"></i>
+                            Member has {{ current_loans|length }} active loan{{ current_loans|pluralize }}.
+                        </small>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle" style="font-size: 3rem; color: #28a745;"></i>
+                        <h5 class="mt-3">No Active Loans</h5>
+                        <p class="text-muted">This member is not currently borrowing any books.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Loan History -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">📜 Loan History</h5>
+            </div>
+            <div class="card-body">
+                {% if loan_history %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Loan Date</th>
+                                    <th>Return Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in loan_history %}
+                                <tr>
+                                    <td>{{ loan.book.title|truncatechars:30 }}</td>
+                                    <td>{{ loan.loan_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if loan.return_date %}
+                                            {{ loan.return_date|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if loan.status == 'RET' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ loan.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No loan history available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+{% if user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="btn-group">
+                    <a href="{% url 'member_update' member.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Edit Member
+                    </a>
+                    <a href="{% url 'loan_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Loan Book to Member
+                    </a>
+                    <a href="{% url 'member_delete' member.pk %}" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete Member
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

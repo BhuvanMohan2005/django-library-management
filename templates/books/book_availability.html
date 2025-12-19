@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Availability - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcsrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'book_list' %}">Books</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'book_detail' book.pk %}">{{ book.title|truncatechars:20 }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Availability</li>
+            </ol>
+        </nav>          
+        <h1>Availability: {{ book.title }}</h1>
+        <p class="text-muted">Check current availability and loan status</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Availability Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="stat-number">{{ book.quantity }}</div>
+                        <div class="stat-label">Total Copies</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-number">{{ book.available_copies }}</div>
+                        <div class="stat-label">Available Now</div>
+                    </div>
+                </div>
+                
+                {% with loaned_copies=book.quantity|add:"-"|add:book.available_copies %}
+                <div class="progress mt-4" style="height: 30px;">
+                    {% widthratio book.available_copies book.quantity 100 as available_percent %}
+                    {% widthratio loaned_copies book.quantity 100 as loaned_percent %}
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ available_percent }}%">
+                         
+                        {{ book.available_copies }} available
+                    </div>
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: {{ loaned_percent }}%">
+                        {{ loaned_copies }} on loan
+                    </div>
+                    
+                </div>
+                {% endwith %}
+                
+                <div class="mt-4">
+                    <div class="alert {% if book.is_available %}alert-success{% else %}alert-danger{% endif %}">
+                        <h5 class="alert-heading">
+                            {% if book.is_available %}
+                                ✅ Available for Loan
+                            {% else %}
+                                ❌ Currently Unavailable
+                            {% endif %}
+                        </h5>
+                        {% if book.is_available %}
+                            <p>This book is available for borrowing. There are {{ book.available_copies }} copy{{ book.available_copies|pluralize }} available.</p>
+                        {% else %}
+                            <p>All copies of this book are currently on loan. Please check back later.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📅 Currently Loaned Out</h5>
+            </div>
+            <div class="card-body">
+                {% if active_loans %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Loan Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in active_loans %}
+                                <tr {% if loan.status == 'OVE' %}class="table-warning"{% endif %}>
+                                    <td>
+                                        <a href="{% url 'member_detail' loan.member.pk %}">
+                                            {{ loan.member.full_name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ loan.loan_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {{ loan.due_date|date:"M d, Y" }}
+                                        {% if loan.status == 'OVE' %}
+                                            <br><small class="text-danger">Overdue</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if loan.status == 'ACT' %}bg-primary{% elif loan.status == 'OVE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                            {{ loan.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <i class="bi bi-info-circle"></i>
+                            Showing {{ active_loans|length }} active loan{{ active_loans|pluralize }}.
+                            Books are typically loaned for 14 days.
+                        </small>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle" style="font-size: 3rem; color: #28a745;"></i>
+                        <h5 class="mt-3">No Active Loans</h5>
+                        <p class="text-muted">All copies of this book are available for borrowing.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="btn-group">
+                    <a href="{% url 'book_detail' book.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Back to Book Details
+                    </a>
+                    <a href="{% url 'book_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-list"></i> All Books
+                    </a>
+                    {% if user.is_authenticated and book.is_available %}
+                    <a href="{% url 'loan_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Loan This Book
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Library Management System Login</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Invalid username or password. Please try again.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            Demo credentials: admin / admin123
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <h5>About This System</h5>
+                <p class="text-muted">
+                    This is a Library Management System built with Django.<br>
+                    It demonstrates CRUD operations, authentication, and database relationships.
+                </p>
+                <p>
+                    <strong>Note:</strong> For demo purposes, you can use the admin panel or continue as guest.
+                </p>
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">Continue as Guest</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

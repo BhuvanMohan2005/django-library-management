@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.title }}{% else %}Add New Book{% endif %} - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'book_list' %}">Books</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    {% if form.instance.pk %}Edit Book{% else %}Add New Book{% endif %}
+                </li>
+            </ol>
+        </nav>
+        <h1>{% if form.instance.pk %}Edit Book: {{ form.instance.title }}{% else %}Add New Book{% endif %}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-body">
+                <!-- Remove enctype="multipart/form-data" since we don't upload files -->
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.author.id_for_label }}" class="form-label">{{ form.author.label }}</label>
+                            {{ form.author }}
+                            {% if form.author.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.author.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.isbn.id_for_label }}" class="form-label">{{ form.isbn.label }}</label>
+                            {{ form.isbn }}
+                            <small class="text-muted">{{ form.isbn.help_text }}</small>
+                            {% if form.isbn.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.isbn.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.genre.id_for_label }}" class="form-label">{{ form.genre.label }}</label>
+                            {{ form.genre }}
+                            {% if form.genre.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.genre.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Publication Details -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.published_date.id_for_label }}" class="form-label">{{ form.published_date.label }}</label>
+                            {{ form.published_date }}
+                            {% if form.published_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.published_date.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.publisher.id_for_label }}" class="form-label">{{ form.publisher.label }}</label>
+                            {{ form.publisher }}
+                            {% if form.publisher.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.publisher.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Inventory - Only quantity now -->
+                    <div class="mb-3">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label">{{ form.quantity.label }}</label>
+                        {{ form.quantity }}
+                        <small class="text-muted">Number of copies in library</small>
+                        {% if form.quantity.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.quantity.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% if form.instance.pk %}{% url 'book_detail' form.instance.pk %}{% else %}{% url 'book_list' %}{% endif %}" 
+                           class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.pk %}Update Book{% else %}Add Book{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    form input, form select, form textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    form label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875em;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Library Management System{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: #ecf0f1 !important;
+        }
+        
+        .sidebar {
+            background-color: #34495e;
+            min-height: calc(100vh - 56px);
+            padding-top: 20px;
+        }
+        
+        .sidebar a {
+            color: #bdc3c7;
+            padding: 10px 20px;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .sidebar a:hover {
+            color: #ecf0f1;
+            background-color: #2c3e50;
+            text-decoration: none;
+        }
+        
+        .sidebar .active {
+            color: #ecf0f1;
+            background-color: #3498db;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 0 10px rgba(0,0,0,.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .book-cover {
+            max-height: 200px;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .availability-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .unavailable {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .overdue {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                📚 Library Management System
+            </a>
+            
+            {% if user.is_authenticated %}
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    Welcome, {{ user.username }}
+                </span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    🏠 Dashboard
+                </a>
+                <a href="{% url 'book_list' %}" class="{% if 'book' in request.resolver_match.url_name %}active{% endif %}">
+                    📚 Books
+                </a>
+                <a href="{% url 'member_list' %}" class="{% if 'member' in request.resolver_match.url_name %}active{% endif %}">
+                    👥 Members
+                </a>
+                <a href="{% url 'loan_list' %}" class="{% if 'loan' in request.resolver_match.url_name %}active{% endif %}">
+                    🔄 Loans
+                </a>
+                
+                {% if user.is_authenticated %}
+                <hr>
+                <a href="{% url 'book_create' %}" class="text-success">
+                    ➕ Add New Book
+                </a>
+                <a href="{% url 'member_create' %}" class="text-success">
+                    ➕ Add New Member
+                </a>
+                <a href="{% url 'loan_create' %}" class="text-success">
+                    ➕ Create Loan
+                </a>
+                <hr>
+                <a href="/admin/" class="text-warning" target="_blank">
+                    ⚙️ Admin Panel
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 content">
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Page Content -->
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Library Management System</h5>
+                    <p>A comprehensive solution for managing library operations</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>&copy; {% now "Y" %} Library Management System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

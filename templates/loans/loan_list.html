@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Loans - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-8">
+        <h1>Book Loans</h1>
+        <p class="text-muted">Track all book loans and returns</p>
+    </div>
+    <div class="col-4 text-end">
+        {% if user.is_authenticated %}
+        <a href="{% url 'loan_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Loan
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="status" class="form-label">Filter by Status</label>
+                <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Loans</option>
+                    {% for code, name in status_choices %}
+                    <option value="{{ code }}" {% if current_status == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <a href="{% url 'loan_list' %}" class="btn btn-outline-secondary">Clear Filter</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Book</th>
+                        <th>Member</th>
+                        <th>Loan Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Fine</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans %}
+                    <tr class="{% if loan.status == 'OVE' %}overdue{% endif %}">
+                        <td>
+                            <a href="{% url 'book_detail' loan.book.pk %}">
+                                {{ loan.book.title|truncatechars:30 }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'member_detail' loan.member.pk %}">
+                                {{ loan.member.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ loan.loan_date|date:"M d, Y" }}</td>
+                        <td>
+                            {{ loan.due_date|date:"M d, Y" }}
+                            {% if loan.status == 'ACT' %}
+                                <br><small class="text-muted">
+                                    Due in {{ loan.due_date|timeuntil }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if loan.status == 'ACT' %}bg-primary
+                                {% elif loan.status == 'RET' %}bg-success
+                                {% elif loan.status == 'OVE' %}bg-warning text-dark
+                                {% else %}bg-secondary{% endif %}">
+                                {{ loan.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if loan.fine_amount > 0 %}
+                                <span class="{% if loan.fine_paid %}text-success{% else %}text-danger{% endif %}">
+                                    ${{ loan.fine_amount }}
+                                    {% if loan.fine_paid %}(Paid){% endif %}
+                                </span>
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if loan.status == 'ACT' or loan.status == 'OVE' %}
+                                <a href="{% url 'loan_return' loan.pk %}" class="btn btn-success">Return</a>
+                                {% endif %}
+                                <a href="{% url 'book_detail' loan.book.pk %}" class="btn btn-outline-primary">View Book</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="alert alert-info">
+                                No loans found. {% if user.is_authenticated %}<a href="{% url 'loan_create' %}">Create the first loan</a>{% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ total_loans }}</div>
+            <div class="stat-label">Total Loans</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ active_loans }}</div>
+            <div class="stat-label">Active Loans</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ overdue_loans }}</div>
+            <div class="stat-label">Overdue Loans</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">${{ total_fines }}</div>
+            <div class="stat-label">Unpaid Fines</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
