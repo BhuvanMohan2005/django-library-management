@@ -4,7 +4,7 @@
 
 A Django-based Library Management System to manage books, members, and loan transactions with borrowing limits, overdue tracking, fine calculation, and a customized admin panel.
 
-##🚀 Features
+## 🚀 Features
 
 Book inventory management (quantity & availability)
 
@@ -18,7 +18,7 @@ Django Admin customization (filters, search, actions)
 
 Clean model-driven business logic
 
-##🛠 Tech Stack
+## 🛠 Tech Stack
 
 Python
 
@@ -28,25 +28,25 @@ SQLite
 
 Django Admin
 
-##⚙️ Setup & Run
+## ⚙️ Setup & Run
 pip install django
 python manage.py migrate
 python manage.py runserver
 
 
-##Access:
+## Access:
 
 App: http://127.0.0.1:8000/
 
 Admin: http://127.0.0.1:8000/admin/
 
-##🔐 Admin Login
+## 🔐 Admin Login
 
 Create superuser:
 
 python manage.py createsuperuser
 
-###📖 Learning Focus
+### 📖 Learning Focus
 
 Django Models & ORM
 
